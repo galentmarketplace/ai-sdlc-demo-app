@@ -27,6 +27,8 @@
 
   <p id="error" role="alert"></p>
 
+  <p id="remaining" data-testid="remaining-count" aria-live="polite"></p>
+
   <div id="controls">
     <button type="button" id="clear-completed">Clear completed</button>
   </div>
@@ -38,6 +40,7 @@
     const input = document.getElementById('title');
     const list = document.getElementById('tasks');
     const error = document.getElementById('error');
+    const remaining = document.getElementById('remaining');
     const clearCompleted = document.getElementById('clear-completed');
 
     async function load() {
@@ -47,6 +50,11 @@
     }
 
     function render(tasks) {
+      // Live count of not-done tasks, above the list. Recomputed on every render,
+      // so add / toggle / delete all keep it current (they each re-render via load()).
+      const notDone = tasks.filter((t) => !t.done).length;
+      remaining.textContent = notDone + ' remaining';
+
       list.innerHTML = '';
       for (const t of tasks) {
         const li = document.createElement('li');
