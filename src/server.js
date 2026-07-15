@@ -48,6 +48,15 @@ app.delete('/api/tasks/:id', (req, res) => {
   res.status(204).end();
 });
 
+// Remove every task marked done, leaving not-done tasks untouched. Idempotent:
+// with no completed tasks this is a no-op that still returns the current list.
+app.post('/api/tasks/clear-completed', (_req, res) => {
+  for (let i = tasks.length - 1; i >= 0; i--) {
+    if (tasks[i].done) tasks.splice(i, 1);
+  }
+  res.json(tasks);
+});
+
 // Only listen when run directly (tests import nothing, but keep it clean).
 if (require.main === module) {
   app.listen(PORT, () => {
