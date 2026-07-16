@@ -32,6 +32,20 @@ app.post('/api/tasks', (req, res) => {
   res.status(201).json(task);
 });
 
+// Edit a task's title in place. 400 if the new title is empty/whitespace,
+// 404 if the id is unknown; otherwise 200 with the updated task.
+app.patch('/api/tasks/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const task = tasks.find((t) => t.id === id);
+  if (!task) return res.status(404).json({ error: 'Not found' });
+  const title = (req.body && typeof req.body.title === 'string') ? req.body.title.trim() : '';
+  if (!title) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+  task.title = title;
+  res.json(task);
+});
+
 app.post('/api/tasks/:id/toggle', (req, res) => {
   const id = Number(req.params.id);
   const task = tasks.find((t) => t.id === id);

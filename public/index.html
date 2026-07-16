@@ -72,6 +72,11 @@
           load();
         };
 
+        const edit = document.createElement('button');
+        edit.textContent = 'Edit';
+        edit.setAttribute('aria-label', 'Edit ' + t.title);
+        edit.onclick = () => startEdit(li, span, t);
+
         const del = document.createElement('button');
         del.textContent = 'Delete';
         del.setAttribute('aria-label', 'Delete ' + t.title);
@@ -80,9 +85,56 @@
           load();
         };
 
-        li.append(toggle, span, del);
+        li.append(toggle, span, edit, del);
         list.appendChild(li);
       }
+    }
+
+    // Swap a task row into an inline edit form: a text input seeded with the
+    // current title plus Save / Cancel. Save commits via PATCH; an empty title
+    // is rejected (the row keeps its original title and a validation message shows).
+    function startEdit(li, span, t) {
+      error.textContent = '';
+      const editForm = document.createElement('form');
+      editForm.className = 'edit-form';
+
+      const editInput = document.createElement('input');
+      editInput.type = 'text';
+      editInput.value = t.title;
+      editInput.setAttribute('aria-label', 'Edit title for ' + t.title);
+      editInput.dataset.testid = 'edit-input';
+
+      const save = document.createElement('button');
+      save.type = 'submit';
+      save.textContent = 'Save';
+      save.setAttribute('aria-label', 'Save ' + t.title);
+
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.textContent = 'Cancel';
+      cancel.setAttribute('aria-label', 'Cancel editing ' + t.title);
+      cancel.onclick = () => load();
+
+      editForm.append(editInput, save, cancel);
+      li.replaceChild(editForm, span);
+      editInput.focus();
+
+      editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        error.textContent = '';
+        const title = editInput.value.trim();
+        const res = await fetch('/api/tasks/' + t.id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          error.textContent = body.error || 'Something went wrong';
+          return;
+        }
+        load();
+      });
     }
 
     clearCompleted.addEventListener('click', async () => {
