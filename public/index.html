@@ -14,6 +14,8 @@
     li { display: flex; align-items: center; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid #eee; }
     li.done span { text-decoration: line-through; color: #888; }
     #error { color: #b00020; min-height: 1.2rem; }
+    /* Intentional-looking empty state: muted, centered — reads as guidance, not an error. */
+    #empty-state { text-align: center; color: #888; padding: 2rem 1rem; font-style: italic; }
   </style>
 </head>
 <body>
@@ -35,6 +37,9 @@
 
   <ul id="tasks" aria-label="Task list"></ul>
 
+  <!-- Shown only when there are no tasks; hidden (via [hidden]) as soon as one exists. -->
+  <p id="empty-state" data-testid="empty-state" hidden>No tasks yet — add your first one above.</p>
+
   <script>
     const form = document.getElementById('task-form');
     const input = document.getElementById('title');
@@ -42,6 +47,7 @@
     const error = document.getElementById('error');
     const remaining = document.getElementById('remaining');
     const clearCompleted = document.getElementById('clear-completed');
+    const emptyState = document.getElementById('empty-state');
 
     async function load() {
       const res = await fetch('/api/tasks');
@@ -54,6 +60,10 @@
       // so add / toggle / delete all keep it current (they each re-render via load()).
       const notDone = tasks.filter((t) => !t.done).length;
       remaining.textContent = notDone + ' remaining';
+
+      // Show the empty-state guidance only when there are no tasks at all; hide it
+      // the moment one exists. Every mutation re-renders via load(), so this stays current.
+      emptyState.hidden = tasks.length > 0;
 
       list.innerHTML = '';
       for (const t of tasks) {
